@@ -1,0 +1,14 @@
+name: nakama-game-server
+data_dir: "/nakama/data"
+
+logger:
+  level: "INFO"
+  stdout: true
+
+session:
+  token_expiry_sec: 7200 # 2 saat
+
+socket:
+  server_key: "defaultkey"
+  port: 7350
+  max_message_size_bytes: 4096 # 4 KB

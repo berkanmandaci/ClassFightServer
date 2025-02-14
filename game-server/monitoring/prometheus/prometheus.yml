@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'nakama'
+    static_configs:
+      - targets: ['nakama:7351']
+
+  - job_name: 'game-server'
+    static_configs:
+      - targets: ['game-server:7777']
+    

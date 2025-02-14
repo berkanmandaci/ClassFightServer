@@ -1,0 +1,17 @@
+# Environment
+.env
+*.env
+
+# Logs
+*.log
+
+# Build
+builds/*
+!builds/.gitkeep
+
+# Docker
+docker/nakama/data/*
+
+# OS
+.DS_Store
+Thumbs.db
