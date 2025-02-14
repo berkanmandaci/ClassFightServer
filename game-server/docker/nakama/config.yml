@@ -1,4 +1,4 @@
-name: nakama-game-server
+name: classfight-server
 data_dir: "/nakama/data"
 
 logger:
@@ -11,4 +11,9 @@ session:
 socket:
   server_key: "defaultkey"
   port: 7350
-  max_message_size_bytes: 4096 # 4 KB
+  max_message_size_bytes: 4096
+
+matchmaker:
+  max_tickets: 2
+  interval_sec: 15
+  max_intervals: 2
