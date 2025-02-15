@@ -1,0 +1,19 @@
+{
+    "Server": {
+      "Port": 7777,
+      "TickRate": 60
+    },
+    "Nakama": {
+      "Host": "nakama",
+      "Port": 7350,
+      "ServerKey": "defaultkey",
+      "Protocol": "http"
+    },
+    "Logging": {
+      "LogLevel": {
+        "Default": "Debug",
+        "System": "Information",
+        "Microsoft": "Information"
+      }
+    }
+  }

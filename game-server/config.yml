@@ -1,0 +1,23 @@
+name: nakama1
+
+logger:
+  level: "DEBUG"
+
+matchmaker:
+  max_tickets: 2
+  interval_sec: 5
+  max_intervals: 1
+
+session:
+  token_expiry_sec: 7200
+  refresh_token_expiry_sec: 87300
+
+runtime:
+  path: "/nakama/data/modules"
+  http_key: "defaulthttpkey"
+  env:
+    - "matchmaking=matchmaking"
+  lua_module_names:
+    - "main"
+    - "matchmaking"
+    - "match_handler"

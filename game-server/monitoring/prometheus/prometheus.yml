@@ -1,12 +1,12 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
   - job_name: 'nakama'
     static_configs:
       - targets: ['nakama:7351']
 
-  - job_name: 'game-server'
+  - job_name: 'unity-server'
     static_configs:
-      - targets: ['game-server:7777']
-    
+      - targets: ['unity-server:7777']
