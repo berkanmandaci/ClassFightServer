@@ -12,17 +12,21 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /game
 
-# Unity Linux build dosyalarını kopyala
-COPY builds/. /game/builds/
+# Unity Linux build dosyalarını kopyala ve izinleri ayarla
+COPY --chown=root:root builds/. /game/builds/
 
 # Tüm build dosyalarına gerekli izinleri ver
-RUN chmod -R 755 /game/builds && \
-    chmod +x /game/builds/ServerBuild.x86_64 && \
-    chmod +x /game/builds/UnityPlayer.so
+RUN ls -la /game/builds && \
+    chmod -R 755 /game/builds && \
+    chmod 755 /game/builds/ServerBuild.x86_64 && \
+    chmod 755 /game/builds/UnityPlayer.so && \
+    chmod 755 /game/builds/libdecor-0.so.0 && \
+    chmod 755 /game/builds/libdecor-cairo.so
 
 # Start script'i oluştur
 RUN echo '#!/bin/bash\n\
 cd /game/builds && \
+export LD_LIBRARY_PATH=/game/builds:$LD_LIBRARY_PATH && \
 ./ServerBuild.x86_64 \
     -batchmode \
     -nographics \
@@ -44,4 +48,4 @@ ENV KCP_INTERVAL=10
 
 EXPOSE 7777/udp
 
-ENTRYPOINT ["/game/start.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "/game/start.sh"]
