@@ -54,6 +54,8 @@ services:
       - NAKAMA_SERVER=nakama
       - NAKAMA_PORT=7350
       - SERVER_PORT=7777
+      - SERVER_PUBLIC_IP=18.184.110.140  # EC2 Public IP
+      - SERVER_PRIVATE_IP=172.31.24.240  # EC2 Private IP
       - KCP_TIMEOUT=30000
       - KCP_NO_DELAY=true
       - KCP_INTERVAL=10
