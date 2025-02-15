@@ -15,12 +15,15 @@ WORKDIR /game
 # Unity Linux build dosyalarını kopyala
 COPY builds/. /game/builds/
 
-# Executable'ı çalıştırılabilir yap
-RUN chmod +x /game/builds/ServerBuild.x86_64
+# Tüm build dosyalarına gerekli izinleri ver
+RUN chmod -R 755 /game/builds && \
+    chmod +x /game/builds/ServerBuild.x86_64 && \
+    chmod +x /game/builds/UnityPlayer.so
 
 # Start script'i oluştur
 RUN echo '#!/bin/bash\n\
-./builds/ServerBuild.x86_64 \
+cd /game/builds && \
+./ServerBuild.x86_64 \
     -batchmode \
     -nographics \
     -nakama-server $NAKAMA_SERVER \
