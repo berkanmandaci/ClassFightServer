@@ -8,6 +8,14 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     libc6 \
     libstdc++6 \
+    mono-runtime \
+    mono-complete \
+    ca-certificates-mono \
+    libmono-system-runtime4.0-cil \
+    libmono-system-net4.0-cil \
+    libmono-system-numerics4.0-cil \
+    libmono-system-xml-linq4.0-cil \
+    libmono-system-data4.0-cil \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /game
@@ -20,16 +28,18 @@ RUN ls -la /game/builds && \
     chmod -R 755 /game/builds && \
     chmod 755 /game/builds/ServerBuild.x86_64 && \
     chmod 755 /game/builds/UnityPlayer.so && \
-    chmod 755 /game/builds/libdecor-0.so.0 && \
-    chmod 755 /game/builds/libdecor-cairo.so
+    find /game/builds -name "*.so" -type f -exec chmod 755 {} \; && \
+    find /game/builds -name "*.dll" -type f -exec chmod 644 {} \;
 
 # Start script'i oluştur
 RUN echo '#!/bin/bash\n\
 cd /game/builds && \
+export MONO_LOG_LEVEL=debug && \
 export LD_LIBRARY_PATH=/game/builds:$LD_LIBRARY_PATH && \
 ./ServerBuild.x86_64 \
     -batchmode \
     -nographics \
+    -logfile /dev/stdout \
     -nakama-server $NAKAMA_SERVER \
     -nakama-port $NAKAMA_PORT \
     -server-port $SERVER_PORT \
