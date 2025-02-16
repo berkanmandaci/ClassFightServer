@@ -1,4 +1,4 @@
-# ClassFight Dinamik Server Sistemi - Yapılacaklar Listesi
+# ClassFight Dinamik Server Sistemi - Yapılacaklar Listesi...
 
 ## 1. Server Tarafı Değişiklikleri ✅
 
