@@ -112,7 +112,7 @@ local function match_create(context, matched_users)
                 MatchId = match_id,
                 server_info = {
                     --host = "localhost",
-                    host = "EC2_PUBLIC_IP",
+                    host = "52.59.221.136",
                     port = server.port
                 },
                 match_data = {
