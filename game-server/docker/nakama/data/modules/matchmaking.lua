@@ -1,45 +1,147 @@
 local nk = require("nakama")
-nk.logger_info("=== matchmaking module loaded ===")
 
-local function matchmaker_matched(context, matched_users)
-    nk.logger_info("Eşleşen oyuncular: " .. nk.json_encode(matched_users))
+-- Server havuzu
+local server_pool = {
+    { id = 1, port = 7777, busy = false },
+    { id = 2, port = 7778, busy = false },
+    { id = 3, port = 7779, busy = false }
+}
 
-    if #matched_users == 2 then
-        nk.logger_info("Matchmaking eşleşmesi bulundu! 2 oyuncu eşleşti.")
-
-        -- Maç oluştur
-        local module = "match_handler"
-        local match_params = { invited_users = matched_users }
-        local match_id = nk.match_create(module, match_params)
-
-        -- Eşleşme bildirimi (code 1001)
-        local match_notifications = {}
-        for _, user in ipairs(matched_users) do
-            table.insert(match_notifications, {
-                user_id = user.presence.user_id,
-                subject = "Eşleşme bulundu!",
-                content = { match_found = true, match_id = match_id },
-                code = 1001,
-                sender_id = nil
-            })
+-- Match fonksiyonları
+local match_callbacks = {
+    match_join_attempt = function(context, dispatcher, tick, state, presence)
+        if state.presences and #state.presences >= 2 then
+            return state, false, "Match is full"
         end
-        nk.notifications_send(match_notifications)
-
-        -- Kullanıcı verisi bildirimi (code 1002)
-        local user_data_notifications = {}
-        for _, user in ipairs(matched_users) do
-            table.insert(user_data_notifications, {
-                user_id = user.presence.user_id,
-                subject = "Kullanıcı Verisi",
-                content = { user_data = user.presence },
-                code = 1002,
-                sender_id = nil
-            })
+        return state, true
+    end,
+    
+    match_join = function(context, dispatcher, tick, state, presences)
+        if not state.presences then
+            state.presences = {}
         end
-        nk.notifications_send(user_data_notifications)
-        
-        nk.logger_info("Match ID: " .. match_id .. " için bildirimler gönderildi.")
+        for _, presence in ipairs(presences) do
+            table.insert(state.presences, presence)
+        end
+        return state
+    end,
+    
+    match_leave = function(context, dispatcher, tick, state, presences)
+        if not state.presences then
+            return state
+        end
+        for _, presence in ipairs(presences) do
+            for i, p in ipairs(state.presences) do
+                if p.user_id == presence.user_id then
+                    table.remove(state.presences, i)
+                    break
+                end
+            end
+        end
+        return state
+    end,
+    
+    match_terminate = function(context, dispatcher, tick, state, grace_seconds)
+        for _, server in ipairs(server_pool) do
+            if server.id == state.server_id then
+                server.busy = false
+                nk.logger_info(string.format("Server serbest bırakıldı: %d", server.id))
+                break
+            end
+        end
+        return state
     end
+}
+
+-- Match oluşturma
+local function match_create(context, matched_users)
+    nk.logger_info(string.format("Eşleşen oyuncu sayısı: %d", #matched_users))
+    
+    -- Boş server bul
+    local server = nil
+    for _, s in ipairs(server_pool) do
+        if not s.busy then
+            server = s
+            nk.logger_info(string.format("Boş server bulundu: %d", s.id))
+            break
+        end
+    end
+    
+    if not server then
+        nk.logger_error("Boş server bulunamadı!")
+        return nil, "No available server"
+    end
+    
+    -- Server'ı meşgul olarak işaretle
+    server.busy = true
+    
+    -- Match ID oluştur
+    local match_id = nk.uuid_v4()
+    
+    -- Match state'ini oluştur
+    local state = {
+        presences = {},
+        match_start_time = os.time(),
+        server_id = server.id,
+        server_port = server.port
+    }
+    
+    -- Match modülünü oluştur
+    local match_module = {
+        state = state,
+        tick_rate = 1,
+        label = "game",
+        handshake_data = {
+            match_id = match_id,
+            server_port = server.port
+        },
+        match_join_attempt = match_callbacks.match_join_attempt,
+        match_join = match_callbacks.match_join,
+        match_leave = match_callbacks.match_leave,
+        match_terminate = match_callbacks.match_terminate
+    }
+
+    -- Match bildirimlerini gönder
+    local notifications = {}
+    for _, user in ipairs(matched_users) do
+        local notification = {
+            user_id = user.presence.user_id,
+            subject = "Match Bulundu",
+            content = {
+                match_found = true,
+                MatchId = match_id,
+                server_info = {
+                    --host = "localhost",
+                    host = "EC2_PUBLIC_IP",
+                    port = server.port
+                },
+                match_data = {
+                    server_id = server.id,
+                    game_mode = user.properties.gameMode or 1,
+                    region = user.properties.region or "eu"
+                }
+            },
+            code = 1001,
+            persistent = false
+        }
+        table.insert(notifications, notification)
+    end
+    
+    if #notifications > 0 then
+        nk.notifications_send(notifications)
+        nk.logger_info(string.format("Match bildirimleri gönderildi - Server Port: %d", server.port))
+    end
+    
+    return match_module
 end
 
-nk.register_matchmaker_matched(matchmaker_matched)
+-- Modülü başlat
+function InitModule(context, config)
+    nk.logger_info("=== MATCHMAKING MODÜLÜ BAŞLATILIYOR ===")
+    nk.register_matchmaker_matched(match_create)
+    nk.logger_info("=== MATCHMAKING MODÜLÜ BAŞLATILDI ===")
+end
+
+return {
+    InitModule = InitModule
+}
