@@ -1,12 +1,10 @@
-# Environment
-.env
-*.env
+
 
 # Logs
 *.log
 
 # Docker
-docker/nakama/data/*
+docker/nakama/data/postgres/*
 
 # OS
 .DS_Store
