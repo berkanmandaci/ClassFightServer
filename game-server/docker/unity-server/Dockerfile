@@ -8,52 +8,24 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     libc6 \
     libstdc++6 \
-    mono-runtime \
-    mono-complete \
-    ca-certificates-mono \
-    libmono-system-runtime4.0-cil \
-    libmono-system-net4.0-cil \
-    libmono-system-numerics4.0-cil \
-    libmono-system-xml-linq4.0-cil \
-    libmono-system-data4.0-cil \
-    file \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /game
 
-# Unity Linux build dosyalarını kopyala ve izinleri ayarla
-COPY --chown=root:root builds/. /game/builds/
+# Unity Linux build dosyalarını kopyala
+COPY builds/. /game/builds/
 
-# Debug için dosya bilgilerini göster ve izinleri ayarla
-RUN echo "Checking file types:" && \
-    file /game/builds/ServerBuild.x86_64 && \
-    file /game/builds/UnityPlayer.so && \
-    echo "Setting permissions..." && \
-    chmod -R 755 /game/builds && \
-    chmod 755 /game/builds/ServerBuild.x86_64 && \
-    chmod 755 /game/builds/UnityPlayer.so && \
-    find /game/builds -name "*.so" -type f -exec chmod 755 {} \; && \
-    find /game/builds -name "*.dll" -type f -exec chmod 644 {} \; && \
-    echo "Checking library dependencies:" && \
-    ldd /game/builds/ServerBuild.x86_64 || true && \
-    echo "Directory structure:" && \
-    ls -la /game/builds && \
-    ls -la /game/builds/ServerBuild_Data/Managed/ || true
+# Tüm build dosyalarına gerekli izinleri ver
+RUN chmod -R 755 /game/builds && \
+    chmod +x /game/builds/ServerBuild.x86_64 && \
+    chmod +x /game/builds/UnityPlayer.so
 
 # Start script'i oluştur
 RUN echo '#!/bin/bash\n\
 cd /game/builds && \
-echo "Current directory: $(pwd)" && \
-echo "Files in current directory:" && \
-ls -la && \
-echo "Library path: $LD_LIBRARY_PATH" && \
-export MONO_LOG_LEVEL=debug && \
-export LD_LIBRARY_PATH=/game/builds:$LD_LIBRARY_PATH && \
-file ./ServerBuild.x86_64 && \
 ./ServerBuild.x86_64 \
     -batchmode \
     -nographics \
-    -logfile /dev/stdout \
     -nakama-server $NAKAMA_SERVER \
     -nakama-port $NAKAMA_PORT \
     -server-port $SERVER_PORT \
@@ -72,4 +44,4 @@ ENV KCP_INTERVAL=10
 
 EXPOSE 7777/udp
 
-ENTRYPOINT ["/bin/bash", "-c", "/game/start.sh"]
+ENTRYPOINT ["/game/start.sh"]
