@@ -58,6 +58,7 @@ services:
       - KCP_NO_DELAY=true
       - KCP_INTERVAL=10
       - BIND_IP=0.0.0.0
+      - EXTERNAL_IP=${EC2_PUBLIC_IP}
     ports:
       - "7777:7777/udp"
     volumes:
@@ -67,6 +68,7 @@ services:
         condition: service_healthy
     networks:
       - game-network
+    restart: always
 
   prometheus:
     container_name: prometheus

@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libc6 \
     libstdc++6 \
     net-tools \
+    iproute2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /game
@@ -21,6 +22,10 @@ RUN chmod +x /game/builds/ServerBuild.x86_64
 
 # Start script'i oluştur
 RUN echo '#!/bin/bash\n\
+# Network interface bilgilerini yazdır\n\
+echo "Network interfaces:"\n\
+ip addr show\n\
+\n\
 ./builds/ServerBuild.x86_64 \
     -batchmode \
     -nographics \
@@ -30,7 +35,8 @@ RUN echo '#!/bin/bash\n\
     -kcp-timeout $KCP_TIMEOUT \
     -kcp-no-delay $KCP_NO_DELAY \
     -kcp-interval $KCP_INTERVAL \
-    -bind-ip ${BIND_IP:-0.0.0.0}' > /game/start.sh \
+    -bind-ip ${BIND_IP:-0.0.0.0} \
+    -external-ip ${EXTERNAL_IP:-0.0.0.0}' > /game/start.sh \
     && chmod +x /game/start.sh
 
 # Environment variables
@@ -41,6 +47,7 @@ ENV KCP_TIMEOUT=30000
 ENV KCP_NO_DELAY=true
 ENV KCP_INTERVAL=10
 ENV BIND_IP=0.0.0.0
+ENV EXTERNAL_IP=0.0.0.0
 
 EXPOSE 7777/udp
 
