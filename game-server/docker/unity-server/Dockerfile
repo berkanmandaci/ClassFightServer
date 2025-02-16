@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     libc6 \
     libstdc++6 \
+    net-tools \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /game
@@ -15,15 +16,12 @@ WORKDIR /game
 # Unity Linux build dosyalarını kopyala
 COPY builds/. /game/builds/
 
-# Tüm build dosyalarına gerekli izinleri ver
-RUN chmod -R 755 /game/builds && \
-    chmod +x /game/builds/ServerBuild.x86_64 && \
-    chmod +x /game/builds/UnityPlayer.so
+# Executable'ı çalıştırılabilir yap
+RUN chmod +x /game/builds/ServerBuild.x86_64
 
 # Start script'i oluştur
 RUN echo '#!/bin/bash\n\
-cd /game/builds && \
-./ServerBuild.x86_64 \
+./builds/ServerBuild.x86_64 \
     -batchmode \
     -nographics \
     -nakama-server $NAKAMA_SERVER \
@@ -31,7 +29,8 @@ cd /game/builds && \
     -server-port $SERVER_PORT \
     -kcp-timeout $KCP_TIMEOUT \
     -kcp-no-delay $KCP_NO_DELAY \
-    -kcp-interval $KCP_INTERVAL' > /game/start.sh \
+    -kcp-interval $KCP_INTERVAL \
+    -bind-ip ${BIND_IP:-0.0.0.0}' > /game/start.sh \
     && chmod +x /game/start.sh
 
 # Environment variables
@@ -41,6 +40,7 @@ ENV SERVER_PORT=7777
 ENV KCP_TIMEOUT=30000
 ENV KCP_NO_DELAY=true
 ENV KCP_INTERVAL=10
+ENV BIND_IP=0.0.0.0
 
 EXPOSE 7777/udp
 

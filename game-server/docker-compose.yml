@@ -54,17 +54,10 @@ services:
       - NAKAMA_SERVER=nakama
       - NAKAMA_PORT=7350
       - SERVER_PORT=7777
-      - SERVER_PUBLIC_IP=18.184.110.140  # EC2 Public IP
-      - SERVER_PRIVATE_IP=172.31.24.240  # EC2 Private IP
       - KCP_TIMEOUT=30000
       - KCP_NO_DELAY=true
       - KCP_INTERVAL=10
-      - UNITY_NETWORK_TICK_RATE=60
-      - UNITY_FIXED_TIMESTEP=0.016667
-      # Windows için performans ayarları
-      - DOTNET_GCHeapHardLimit=2048576
-      - DOTNET_gcServer=1
-      - DOTNET_GCLatencyLevel=0
+      - BIND_IP=0.0.0.0
     ports:
       - "7777:7777/udp"
     volumes:
@@ -73,15 +66,7 @@ services:
       nakama:
         condition: service_healthy
     networks:
-      game-network:
-        aliases:
-          - unity-server
-    # Windows'ta çalışan container optimizasyonları
-    ipc: host
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
+      - game-network
 
   prometheus:
     container_name: prometheus
